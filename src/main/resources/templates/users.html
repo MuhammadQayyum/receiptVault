@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>ReceiptVault - Users</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">
+        <div class="brand-icon">🧾</div>
+        <div class="brand-name">Receipt<span>Vault</span></div>
+    </a>
+    <div class="navbar-nav">
+        <a href="/dashboard" class="navbar-link">Dashboard</a>
+        <a href="/receipts/new" class="navbar-link">Add Receipt</a>
+        <a href="/businesses" class="navbar-link">My Businesses</a>
+        <a href="/properties" class="navbar-link">Rental Properties</a>
+        <a href="/invoices" class="navbar-link">Invoices</a>
+        <a sec:authorize="hasRole('ADMIN')" href="/users" class="navbar-link active">Manage Users</a>
+    </div>
+    <div class="navbar-user">
+        <span th:text="${#authentication.name}"></span>
+        <form method="post" action="/logout" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="navbar-link"
+                    style="background:none; border:none; cursor:pointer; color:rgba(255,255,255,0.45);">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="page-content">
+
+    <div th:if="${success}" class="alert alert-success">
+        ✓ <span th:text="${success}"></span>
+    </div>
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">Manage Users</div>
+            <div class="page-subtitle">Enable or disable user access to the system</div>
+        </div>
+        <a href="/register" class="btn btn-primary">+ New User</a>
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+            <tr>
+                <th>Full Name</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="u : ${users}">
+                <td style="font-weight:600;" th:text="${u.fullName}"></td>
+                <td th:text="${u.username}"></td>
+                <td>
+                        <span th:if="${u.role == 'ADMIN'}"
+                              style="background:#EDE9FE; color:#5B21B6; padding:3px 10px;
+                                     border-radius:20px; font-size:11px; font-weight:600;">
+                            👑 Admin
+                        </span>
+                    <span th:unless="${u.role == 'ADMIN'}"
+                          style="background:#F3F4F6; color:#374151; padding:3px 10px;
+                                     border-radius:20px; font-size:11px; font-weight:600;">
+                            👤 User
+                        </span>
+                </td>
+                <td>
+                        <span th:if="${u.isValid}"
+                              style="background:#D1FAE5; color:#065F46; padding:3px 10px;
+                                     border-radius:20px; font-size:11px; font-weight:600;">
+                            ✓ Active
+                        </span>
+                    <span th:unless="${u.isValid}"
+                          style="background:#FEE2E2; color:#991B1B; padding:3px 10px;
+                                     border-radius:20px; font-size:11px; font-weight:600;">
+                            ✗ Disabled
+                        </span>
+                </td>
+                <td style="font-size:12px; color:var(--muted);"
+                    th:text="${u.createdAt}"></td>
+                <td>
+                    <form th:action="'/users/' + ${u.userID} + '/toggle'"
+                          method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}">
+                        <button type="submit"
+                                th:class="${u.isValid} ? 'btn btn-danger btn-sm' : 'btn btn-primary btn-sm'"
+                                th:text="${u.isValid} ? 'Disable' : 'Enable'">
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<footer class="footer">
+    ReceiptVault &copy; 2026 &nbsp;·&nbsp; Personal Receipt Management
+</footer>
+
+</body>
+</html>

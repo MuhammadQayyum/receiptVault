@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Printing...</title>
+</head>
+<body>
+<script th:inline="javascript">
+    const receiptId = [[${receipt.receiptID}]];
+    const win = window.open('/receipts/' + receiptId + '/print', '_blank', 'width=750,height=900');
+    win.addEventListener('load', function() {
+        win.print();
+    });
+    window.location.href = '/dashboard';
+</script>
+</body>
+</html>

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Receipt</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background: white;
+            color: black;
+            width: 80mm;
+            margin: 0 auto;
+            padding: 4mm;
+            font-size: 12px;
+        }
+
+        .screen-only {
+            width: 100%;
+            text-align: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px dashed #ccc;
+        }
+
+        .screen-only button {
+            background: #1A1F2E;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-right: 8px;
+        }
+
+        .screen-only button:hover { background: #4F6EF7; }
+
+        .screen-only a {
+            color: #888;
+            font-size: 12px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .receipt { width: 100%; }
+
+        .center { text-align: center; }
+        .right  { text-align: right; }
+        .bold   { font-weight: bold; }
+        .large  { font-size: 16px; }
+        .small  { font-size: 10px; }
+        .muted  { color: #555; }
+
+        .divider {
+            border: none;
+            border-top: 1px dashed black;
+            margin: 6px 0;
+        }
+
+        .divider-solid {
+            border: none;
+            border-top: 1px solid black;
+            margin: 6px 0;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 2px 0;
+        }
+
+        .row-label { color: #333; }
+        .row-value { font-weight: bold; text-align: right; }
+
+        .amount-box {
+            text-align: center;
+            padding: 8px 0;
+        }
+
+        .amount-big {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .status-paid {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 3px;
+        }
+
+        .status-unpaid {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+        }
+
+        .barcode-section {
+            text-align: center;
+            margin: 8px 0;
+        }
+
+        .barcode-section svg {
+            max-width: 100%;
+        }
+
+        @media print {
+            .screen-only { display: none; }
+            body {
+                width: 80mm;
+                margin: 0;
+                padding: 2mm;
+            }
+            @page {
+                size: 80mm auto;
+                margin: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Screen only buttons -->
+<div class="screen-only">
+    <button onclick="window.print()">🖨 Print Receipt</button>
+    <a onclick="window.close()">← Back</a>
+</div>
+
+<!-- Receipt Content -->
+<div class="receipt">
+
+    <!-- Business Header -->
+    <div class="center">
+        <div class="bold large"
+             th:text="${receipt.business != null ? receipt.business.businessName : 'ReceiptVault'}"></div>
+        <div class="small muted" th:if="${receipt.business != null}">
+            <div th:text="${receipt.business.ownerName}"></div>
+            <div th:text="${receipt.business.address}"></div>
+            <div th:text="${receipt.business.city + ', ' + receipt.business.state + ' ' + receipt.business.zipCode}"></div>
+            <div th:text="${receipt.business.phone}"></div>
+            <div th:text="${receipt.business.email}"></div>
+            <div th:if="${receipt.business.website}" th:text="${receipt.business.website}"></div>
+        </div>
+    </div>
+
+    <hr class="divider-solid">
+
+    <!-- Receipt Title -->
+    <div class="center bold large" style="letter-spacing:4px;">RECEIPT</div>
+    <div class="center small muted"
+         th:text="'# ' + ${receipt.receiptID}"></div>
+
+    <hr class="divider">
+
+    <!-- Receipt Details -->
+    <div class="row">
+        <span class="row-label">Date:</span>
+        <span class="row-value" th:text="${receipt.receiptDate}"></span>
+    </div>
+    <div class="row">
+        <span class="row-label">Property:</span>
+        <span class="row-value"
+              th:text="${receipt.property != null ? receipt.property.propertyName : '—'}"></span>
+    </div>
+    <div class="row" th:if="${receipt.property != null}">
+        <span class="row-label">Address:</span>
+        <span class="row-value" style="max-width:55mm; text-align:right;"
+              th:text="${receipt.property.address + ', ' + receipt.property.city + ', ' + receipt.property.state}"></span>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Amount -->
+    <div class="amount-box">
+        <div class="small muted">AMOUNT</div>
+        <div class="amount-big"
+             th:text="'$' + ${#numbers.formatDecimal(receipt.amount, 1, 2)}"></div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="row" th:if="${receipt.paymentMethod != null}">
+        <span class="row-label">Payment Method:</span>
+        <span class="row-value"
+              th:text="${receipt.paymentMethod + (receipt.paymentType != null ? ' — ' + receipt.paymentType : '')}"></span>
+    </div>
+
+    <!-- Notes -->
+    <div th:if="${receipt.description != null and !receipt.description.isEmpty()}"
+         style="padding:4px 0;">
+        <div class="small muted">Notes:</div>
+        <div class="small" th:text="${receipt.description}"></div>
+        <hr class="divider">
+    </div>
+
+    <!-- Barcode -->
+    <div class="barcode-section">
+        <svg id="barcode"></svg>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Footer -->
+    <div class="center small muted" style="padding:4px 0;">
+        <div>Thank you!</div>
+        <div>Generated by ReceiptVault</div>
+        <div th:text="${receipt.createdAt}"></div>
+    </div>
+
+</div>
+
+<script th:inline="javascript">
+        const receiptId = [[${receipt.receiptID}]];
+        const receiptDate = [[${receipt.receiptDate}]];
+        const barcodeValue = 'RV' + String(receiptId).padStart(6, '0') + receiptDate.replace(/-/g, '');
+
+        JsBarcode("#barcode", barcodeValue, {
+            format: "CODE128",
+            width: 1.5,
+            height: 50,
+            displayValue: true,
+            fontSize: 10,
+            margin: 4,
+            background: "#ffffff",
+            lineColor: "#000000"
+        });
+    </script>
+
+</body>
+</html>

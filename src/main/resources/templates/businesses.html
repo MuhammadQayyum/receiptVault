@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>ReceiptVault - My Businesses</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">
+        <div class="brand-icon">🧾</div>
+        <div class="brand-name">Receipt<span>Vault</span></div>
+    </a>
+    <div class="navbar-nav">
+        <a href="/dashboard" class="navbar-link">Dashboard</a>
+        <a href="/receipts/new" class="navbar-link">Add Receipt</a>
+        <a href="/businesses" class="navbar-link">My Businesses</a>
+        <a href="/properties" class="navbar-link">Rental Properties</a>
+        <a href="/invoices" class="navbar-link">Invoices</a>
+        <a sec:authorize="hasRole('ADMIN')" href="/users" class="navbar-link">Manage Users</a>
+    </div>
+    <div class="navbar-user">
+        <span th:text="${#authentication.name}"></span>
+        <form method="post" action="/logout" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="navbar-link"
+                    style="background:none; border:none; cursor:pointer; color:rgba(255,255,255,0.45);">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="page-content">
+
+    <div th:if="${success}" class="alert alert-success">
+        ✓ <span th:text="${success}"></span>
+    </div>
+
+    <div class="page-header">
+        <div>
+            <div class="page-title">My Businesses</div>
+            <div class="page-subtitle">Manage your business profiles used on receipts</div>
+        </div>
+        <a href="/businesses/new" class="btn btn-primary">+ Add Business</a>
+    </div>
+
+    <!-- Business Cards -->
+    <div th:if="${!#lists.isEmpty(businesses)}"
+         style="display:grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap:20px;">
+
+        <div th:each="biz : ${businesses}"
+             style="background:white; border-radius:12px; border:1px solid var(--border);
+                    padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
+                <div>
+                    <div style="font-size:18px; font-weight:700; color:var(--navy);"
+                         th:text="${biz.businessName}"></div>
+                    <div style="font-size:13px; color:var(--muted);"
+                         th:text="${biz.ownerName}"></div>
+                </div>
+                <div style="width:42px; height:42px; background:linear-gradient(135deg,#4F6EF7,#8B5CF6);
+                            border-radius:10px; display:flex; align-items:center;
+                            justify-content:center; font-size:20px;">
+                    🏢
+                </div>
+            </div>
+
+            <div style="font-size:13px; color:var(--muted); line-height:1.8;">
+                <div th:if="${biz.phone}">📞 <span th:text="${biz.phone}"></span></div>
+                <div th:if="${biz.email}">✉ <span th:text="${biz.email}"></span></div>
+                <div th:if="${biz.address}">
+                    📍 <span th:text="${biz.address + ', ' + biz.city + ', ' + biz.state + ' ' + biz.zipCode}"></span>
+                </div>
+                <div th:if="${biz.website}">🌐 <span th:text="${biz.website}"></span></div>
+            </div>
+
+            <div style="display:flex; gap:8px; margin-top:16px; padding-top:16px;
+                        border-top:1px solid var(--border);">
+                <a th:href="'/businesses/' + ${biz.businessID} + '/edit'"
+                   class="btn btn-secondary btn-sm">✏ Edit</a>
+                <form th:action="'/businesses/' + ${biz.businessID} + '/delete'"
+                      method="post"
+                      onsubmit="return confirm('Delete this business?')">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-danger btn-sm">🗑 Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(businesses)}"
+         style="background:white; border-radius:12px; border:1px solid var(--border);
+                padding:60px 20px; text-align:center; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+        <div style="font-size:48px; margin-bottom:16px;">🏢</div>
+        <div style="font-size:16px; font-weight:600; color:var(--navy); margin-bottom:8px;">
+            No businesses yet
+        </div>
+        <div style="font-size:13px; color:var(--muted); margin-bottom:24px;">
+            Add your first business to start creating receipts.
+        </div>
+        <a href="/businesses/new" class="btn btn-primary">+ Add Business</a>
+    </div>
+
+</div>
+
+<footer class="footer">
+    ReceiptVault &copy; 2026 &nbsp;·&nbsp; Personal Receipt Management
+</footer>
+
+</body>
+</html>

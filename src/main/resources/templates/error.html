@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>ReceiptVault - Error</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-card" style="text-align:center;">
+
+        <div class="login-logo">
+            <div class="login-logo-icon">🧾</div>
+        </div>
+
+        <div style="font-size:52px; font-weight:700; color:var(--navy);"
+             th:text="${status}">404</div>
+
+        <div style="font-size:16px; font-weight:600; color:var(--navy); margin:8px 0 4px;">
+            Oops — something went wrong
+        </div>
+
+        <div style="font-size:13px; color:var(--muted); margin-bottom:28px;">
+            The page you are looking for could not be found.
+        </div>
+
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <a href="/dashboard" class="btn btn-primary"
+               style="width:200px; justify-content:center;">
+                ← Back to Dashboard
+            </a>
+            <a href="/login" style="font-size:12px; color:var(--blue);">
+                or go to Login
+            </a>
+        </div>
+    </div>
+</div>
+</body>
+</html>
