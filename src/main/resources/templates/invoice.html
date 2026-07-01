@@ -162,7 +162,8 @@
 
                     <div class="form-group">
                         <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px;">
-                            <input type="checkbox" name="includeLateFee" value="true" checked
+                            <input type="checkbox" name="includeLateFee" value="true"
+                                   th:checked="${inv.dueDate.isBefore(today) or inv.dueDate.isEqual(today)}"
                                    style="width:16px; height:16px;">
                             Add $50.00 late fee
                         </label>
