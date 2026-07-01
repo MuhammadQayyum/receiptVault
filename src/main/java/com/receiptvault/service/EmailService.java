@@ -37,8 +37,8 @@ public class EmailService {
             mailSender.send(message);
             System.out.println("Receipt email sent successfully to " + recipientEmail);
 
-        } catch (MessagingException e) {
-            System.err.println("Failed to send email: " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println("Failed to send email — continuing without email: " + e.getMessage());
         }
     }
 
