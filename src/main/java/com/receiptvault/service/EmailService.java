@@ -1,44 +1,48 @@
 package com.receiptvault.service;
 
 import com.receiptvault.entity.Receipt;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
 
 @Service
 public class EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${RESEND_API_KEY:}")
+    private String resendApiKey;
 
-    @Value("${app.receipt.email}")
+    @Value("${RECEIPT_EMAIL:}")
     private String recipientEmail;
 
     public void sendReceiptEmail(Receipt receipt) {
+        if (resendApiKey == null || resendApiKey.isEmpty()) {
+            System.out.println("Resend API key not configured — skipping email.");
+            return;
+        }
+
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            Resend resend = new Resend(resendApiKey);
 
             String propertyAddress = receipt.getProperty() != null ?
                     receipt.getProperty().getAddress() : "Unknown Property";
             String subject = "Receipt #" + receipt.getReceiptID() +
                     " — " + propertyAddress;
 
-            String body = buildEmailBody(receipt);
+            CreateEmailOptions params = CreateEmailOptions.builder()
+                    .from("ReceiptVault <onboarding@resend.dev>")
+                    .to(recipientEmail)
+                    .subject(subject)
+                    .html(buildEmailBody(receipt))
+                    .build();
 
-            helper.setTo(recipientEmail);
-            helper.setSubject(subject);
-            helper.setText(body, true);
+            CreateEmailResponse data = resend.emails().send(params);
+            System.out.println("Email sent successfully — ID: " + data.getId());
 
-            mailSender.send(message);
-            System.out.println("Receipt email sent successfully to " + recipientEmail);
-
-        } catch (Exception e) {
-            System.err.println("Failed to send email — continuing without email: " + e.getMessage());
+        } catch (ResendException e) {
+            System.err.println("Failed to send email: " + e.getMessage());
         }
     }
 
@@ -50,9 +54,7 @@ public class EmailService {
                         <p style='color:rgba(255,255,255,0.6); margin:4px 0 0;'>Receipt Notification</p>
                     </div>
                     <div style='background:#F7F8FC; padding:24px; border:1px solid #E2E6F0;'>
-                        <h2 style='color:#1A1F2E; margin:0 0 16px;'>
-                            Receipt #%d
-                        </h2>
+                        <h2 style='color:#1A1F2E; margin:0 0 16px;'>Receipt #%d</h2>
                         <table style='width:100%%; border-collapse:collapse;'>
                             <tr style='background:white;'>
                                 <td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:12px; color:#888; font-weight:bold; text-transform:uppercase;'>Business</td>
@@ -93,11 +95,6 @@ public class EmailService {
                         receipt.getProperty().getZipCode() : "—",
                 receipt.getReceiptDate(),
                 receipt.getAmount().toPlainString(),
-                receipt.getPaymentMethod() != null ?
-                        "<tr style='background:white;'><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:12px; color:#888; font-weight:bold; text-transform:uppercase;'>Payment Method</td><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:14px;'>" +
-                                receipt.getPaymentMethod() +
-                                (receipt.getPaymentType() != null ? " — " + receipt.getPaymentType() : "") +
-                                "</td></tr>" : "",
                 receipt.getDescription() != null && !receipt.getDescription().isEmpty() ?
                         "<tr style='background:#FAFBFF;'><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:12px; color:#888; font-weight:bold; text-transform:uppercase;'>Notes</td><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:14px;'>" + receipt.getDescription() + "</td></tr>" : "",
                 receipt.getCreatedAt()
