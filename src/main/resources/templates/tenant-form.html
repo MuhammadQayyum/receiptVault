@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>ReceiptVault - Tenant Form</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<nav class="navbar">
+    <a href="/dashboard" class="navbar-brand">
+        <div class="brand-icon">🧾</div>
+        <div class="brand-name">Receipt<span>Vault</span></div>
+    </a>
+    <div class="navbar-nav">
+        <a href="/dashboard" class="navbar-link">Dashboard</a>
+        <a href="/receipts/new" class="navbar-link">Add Receipt</a>
+        <a href="/businesses" class="navbar-link">My Businesses</a>
+        <a href="/properties" class="navbar-link">Rental Properties</a>
+        <a href="/tenants" class="navbar-link active">Tenants</a>
+        <a href="/invoices" class="navbar-link">Invoices</a>
+        <a sec:authorize="hasRole('ADMIN')" href="/users" class="navbar-link">Manage Users</a>
+    </div>
+    <div class="navbar-user">
+        <span th:text="${#authentication.name}"></span>
+        <form method="post" action="/logout" style="display:inline;">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+            <button type="submit" class="navbar-link"
+                    style="background:none; border:none; cursor:pointer; color:rgba(255,255,255,0.45);">
+                Logout
+            </button>
+        </form>
+    </div>
+</nav>
+
+<div class="page-content">
+
+    <div th:if="${error}" class="alert alert-danger">
+        ⚠ <span th:text="${error}"></span>
+    </div>
+    <div th:if="${success}" class="alert alert-success">
+        ✓ <span th:text="${success}"></span>
+    </div>
+
+    <div class="page-header">
+        <div>
+            <div class="page-title"
+                 th:text="${tenant.tenantID != null} ? 'Edit Tenant' : 'Add New Tenant'"></div>
+            <div class="page-subtitle">Fill in the tenant details below</div>
+        </div>
+        <a href="/tenants" class="btn btn-secondary">← Back</a>
+    </div>
+
+    <!-- Tenant Info Form -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; align-items:start;">
+
+        <div class="form-card">
+            <h3 style="font-size:15px; font-weight:600; color:var(--navy); margin-bottom:20px;">
+                Personal Information
+            </h3>
+            <form th:action="${tenant.tenantID != null} ? '/tenants/' + ${tenant.tenantID} + '/edit' : '/tenants/new'"
+                  method="post">
+
+                <div class="form-group">
+                    <label class="form-label">First Name *</label>
+                    <input type="text" name="firstName" class="form-control"
+                           placeholder="First name"
+                           th:value="${tenant.firstName}" required autofocus>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Last Name *</label>
+                    <input type="text" name="lastName" class="form-control"
+                           placeholder="Last name"
+                           th:value="${tenant.lastName}" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control"
+                           placeholder="Tenant email address"
+                           th:value="${tenant.email}">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control"
+                           placeholder="Tenant phone number"
+                           th:value="${tenant.phone}">
+                </div>
+
+                <!-- Move In Date and Property only for new tenant -->
+                <div th:unless="${tenant.tenantID != null}">
+                    <div class="form-group">
+                        <label class="form-label">Move-in Date</label>
+                        <input type="date" name="moveInDate" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Assign Property</label>
+                        <select name="propertyId" class="form-control">
+                            <option value="">No property assigned</option>
+                            <option th:each="prop : ${properties}"
+                                    th:value="${prop.propertyID}"
+                                    th:text="${prop.propertyName + ' — ' + prop.address}"></option>
+                        </select>
+                    </div>
+                </div>
+
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                <div style="display:flex; gap:12px; margin-top:8px;">
+                    <button type="submit" class="btn btn-primary">💾 Save Tenant</button>
+                    <a href="/tenants" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Assign Property Section (only for existing tenants) -->
+        <div th:if="${tenant.tenantID != null}">
+            <div class="form-card" style="margin-bottom:20px;">
+                <h3 style="font-size:15px; font-weight:600; color:var(--navy); margin-bottom:20px;">
+                    Assign to Property
+                </h3>
+                <form th:action="'/tenants/' + ${tenant.tenantID} + '/assign'" method="post">
+                    <div class="form-group">
+                        <label class="form-label">Property</label>
+                        <select name="propertyId" class="form-control" required>
+                            <option value="">Select a property...</option>
+                            <option th:each="prop : ${properties}"
+                                    th:value="${prop.propertyID}"
+                                    th:text="${prop.propertyName + ' — ' + prop.address}"></option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Move-in Date</label>
+                        <input type="date" name="moveInDate" class="form-control">
+                    </div>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+                        🏠 Assign Property
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tenant History -->
+            <div class="table-card" th:if="${!#lists.isEmpty(tenantHistory)}">
+                <div class="table-toolbar">
+                    <div class="toolbar-title">Property History</div>
+                </div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Property</th>
+                        <th>Move-in</th>
+                        <th>Move-out</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="h : ${tenantHistory}">
+                        <td th:text="${h.property.propertyName}"></td>
+                        <td th:text="${h.moveInDate != null ? h.moveInDate : '—'}"></td>
+                        <td th:text="${h.moveOutDate != null ? h.moveOutDate : '—'}"></td>
+                        <td>
+                                <span th:if="${h.current}"
+                                      style="background:#D1FAE5; color:#065F46; padding:3px 10px;
+                                             border-radius:20px; font-size:11px; font-weight:600;">
+                                    ✓ Current
+                                </span>
+                            <span th:unless="${h.current}"
+                                  style="background:#F3F4F6; color:#6B7280; padding:3px 10px;
+                                             border-radius:20px; font-size:11px; font-weight:600;">
+                                    Past
+                                </span>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<footer class="footer">
+    ReceiptVault &copy; 2026 &nbsp;·&nbsp; Personal Receipt Management
+</footer>
+
+</body>
+</html>

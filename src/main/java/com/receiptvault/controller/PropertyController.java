@@ -3,6 +3,7 @@ package com.receiptvault.controller;
 import com.receiptvault.entity.Property;
 import com.receiptvault.entity.User;
 import com.receiptvault.service.PropertyService;
+import com.receiptvault.service.TenantService;
 import com.receiptvault.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -12,6 +13,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/properties")
@@ -23,9 +25,18 @@ public class PropertyController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private TenantService tenantService;
+
     @GetMapping
     public String listProperties(Model model) {
-        model.addAttribute("properties", propertyService.getAllProperties());
+        List<Property> properties = propertyService.getAllProperties();
+        Map<Long, Boolean> tenantMap = new java.util.HashMap<>();
+        for (Property p : properties) {
+            tenantMap.put(p.getPropertyID(), tenantService.propertyHasCurrentTenant(p));
+        }
+        model.addAttribute("properties", properties);
+        model.addAttribute("tenantMap", tenantMap);
         return "properties";
     }
 

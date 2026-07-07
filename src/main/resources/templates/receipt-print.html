@@ -162,6 +162,10 @@
         <span class="row-label">Date:</span>
         <span class="row-value" th:text="${receipt.receiptDate}"></span>
     </div>
+    <div class="row" th:if="${receipt.tenantName != null}">
+        <span class="row-label">Tenant:</span>
+        <span class="row-value" th:text="${receipt.tenantName}"></span>
+    </div>
     <div class="row">
         <span class="row-label">Property:</span>
         <span class="row-value"

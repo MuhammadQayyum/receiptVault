@@ -18,6 +18,7 @@
         <a href="/receipts/new" class="navbar-link active">Add Receipt</a>
         <a href="/businesses" class="navbar-link">My Businesses</a>
         <a href="/properties" class="navbar-link">Rental Properties</a>
+        <a href="/tenants" class="navbar-link">Tenants</a>
         <a href="/invoices" class="navbar-link">Invoices</a>
         <a sec:authorize="hasRole('ADMIN')" href="/users" class="navbar-link">Manage Users</a>
     </div>
@@ -34,6 +35,11 @@
 </nav>
 
 <div class="page-content">
+
+    <div th:if="${error}" class="alert alert-danger">
+        ⚠ <span th:text="${error}"></span>
+    </div>
+
     <div class="page-header">
         <div>
             <div class="page-title">Add New Receipt</div>
@@ -70,8 +76,13 @@
                     <option th:each="prop : ${properties}"
                             th:value="${prop.propertyID}"
                             th:attr="data-rent=${prop.rentPrice}"
-                            th:text="${prop.propertyName + ' — ' + prop.address}"></option>
+                            th:disabled="${!tenantMap[prop.propertyID]}"
+                            th:text="${prop.propertyName + ' — ' + prop.address + (tenantMap[prop.propertyID] ? '' : ' ⚠ No Tenant')}">
+                    </option>
                 </select>
+                <div style="font-size:12px; color:var(--muted); margin-top:5px;">
+                    ⚠ Properties marked with "No Tenant" cannot be selected.
+                </div>
                 <div th:if="${#lists.isEmpty(properties)}"
                      style="font-size:12px; color:var(--red); margin-top:6px;">
                     ⚠ No properties found.
@@ -226,6 +237,8 @@ document.getElementById('receiptForm').addEventListener('submit', function(e) {
         depositInput.value = '0';
     }
 });
+
+
 </script>
 
 </body>

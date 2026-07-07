@@ -30,21 +30,21 @@ public class ReceiptService {
                                  String description, Business business,
                                  Property property, User user) {
         return createReceipt(amount, receiptDate, description, business,
-                property, BigDecimal.ZERO, null, null, BigDecimal.ZERO, user);
+                property, BigDecimal.ZERO, null, null, BigDecimal.ZERO, null, user);
     }
 
     public Receipt createReceipt(BigDecimal amount, LocalDate receiptDate,
                                  String description, Business business,
                                  Property property, BigDecimal lateFee, User user) {
         return createReceipt(amount, receiptDate, description, business,
-                property, lateFee, null, null, BigDecimal.ZERO, user);
+                property, lateFee, null, null, BigDecimal.ZERO, null, user);
     }
 
     public Receipt createReceipt(BigDecimal amount, LocalDate receiptDate,
                                  String description, Business business,
                                  Property property, BigDecimal lateFee,
                                  String paymentMethod, String paymentType,
-                                 BigDecimal securityDeposit, User user) {
+                                 BigDecimal securityDeposit, String tenantName, User user) {
         Receipt receipt = new Receipt();
         receipt.setStoreName(property != null ? property.getPropertyName() : "Unknown");
         receipt.setAmount(amount);
@@ -56,6 +56,7 @@ public class ReceiptService {
         receipt.setSecurityDeposit(securityDeposit != null ? securityDeposit : BigDecimal.ZERO);
         receipt.setPaymentMethod(paymentMethod);
         receipt.setPaymentType(paymentType);
+        receipt.setTenantName(tenantName);
         receipt.setUser(user);
         return receiptRepository.save(receipt);
     }

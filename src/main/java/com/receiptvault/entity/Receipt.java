@@ -47,6 +47,9 @@ public class Receipt {
     @JoinColumn(name = "propertyID")
     private Property property;
 
+    @Column(name = "tenant_name", length = 150)
+    private String tenantName;
+
     @ManyToOne
     @JoinColumn(name = "userID", nullable = false)
     private User user;
@@ -162,5 +165,13 @@ public class Receipt {
 
     public void setSecurityDeposit(BigDecimal securityDeposit) {
         this.securityDeposit = securityDeposit;
+    }
+
+    public String getTenantName() {
+        return tenantName;
+    }
+
+    public void setTenantName(String tenantName) {
+        this.tenantName = tenantName;
     }
 }

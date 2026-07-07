@@ -4,6 +4,7 @@ import com.receiptvault.entity.Invoice;
 import com.receiptvault.entity.Property;
 import com.receiptvault.repository.InvoiceRepository;
 import com.receiptvault.repository.ReceiptRepository;
+import com.receiptvault.repository.TenantHistoryRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +21,9 @@ public class InvoiceService {
     @Autowired
     private ReceiptRepository receiptRepository;
 
+    @Autowired
+    private TenantHistoryRepository tenantHistoryRepository;
+
     public Optional<Invoice> getInvoiceById(Long id) {
         return invoiceRepository.findById(id);
     }
@@ -30,6 +34,13 @@ public class InvoiceService {
 
     // Generates an invoice for a property for the given month/year if one doesn't already exist
     public void generateInvoiceForProperty(Property property, int month, int year) {
+        // Only generate invoice if property has a current tenant
+        boolean hasTenant = tenantHistoryRepository.existsByPropertyAndMoveOutDateIsNull(property);
+        if (!hasTenant) {
+            System.out.println("Skipping invoice for " + property.getPropertyName() + " — no current tenant.");
+            return;
+        }
+
         boolean invoiceExists = invoiceRepository
                 .existsByPropertyAndBillingMonthAndBillingYear(property, month, year);
         boolean receiptExists = !receiptRepository
