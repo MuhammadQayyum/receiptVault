@@ -3,6 +3,7 @@ package com.receiptvault.service;
 import com.receiptvault.entity.Business;
 import com.receiptvault.entity.Property;
 import com.receiptvault.entity.Receipt;
+import com.receiptvault.entity.TenantHistory;
 import com.receiptvault.entity.User;
 import com.receiptvault.repository.ReceiptRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,36 +28,36 @@ public class ReceiptService {
     }
 
     public Receipt createReceipt(BigDecimal amount, LocalDate receiptDate,
-                                 String description, Business business,
+                                 String notes, Business business,
                                  Property property, User user) {
-        return createReceipt(amount, receiptDate, description, business,
+        return createReceipt(amount, receiptDate, notes, business,
                 property, BigDecimal.ZERO, null, null, BigDecimal.ZERO, null, user);
     }
 
     public Receipt createReceipt(BigDecimal amount, LocalDate receiptDate,
-                                 String description, Business business,
+                                 String notes, Business business,
                                  Property property, BigDecimal lateFee, User user) {
-        return createReceipt(amount, receiptDate, description, business,
+        return createReceipt(amount, receiptDate, notes, business,
                 property, lateFee, null, null, BigDecimal.ZERO, null, user);
     }
 
     public Receipt createReceipt(BigDecimal amount, LocalDate receiptDate,
-                                 String description, Business business,
+                                 String notes, Business business,
                                  Property property, BigDecimal lateFee,
                                  String paymentMethod, String paymentType,
-                                 BigDecimal securityDeposit, String tenantName, User user) {
+                                 BigDecimal securityDeposit,
+                                 TenantHistory tenantHistory, User user) {
         Receipt receipt = new Receipt();
-        receipt.setStoreName(property != null ? property.getPropertyName() : "Unknown");
         receipt.setAmount(amount);
         receipt.setReceiptDate(receiptDate);
-        receipt.setDescription(description);
+        receipt.setNotes(notes);
         receipt.setBusiness(business);
         receipt.setProperty(property);
         receipt.setLateFee(lateFee != null ? lateFee : BigDecimal.ZERO);
         receipt.setSecurityDeposit(securityDeposit != null ? securityDeposit : BigDecimal.ZERO);
         receipt.setPaymentMethod(paymentMethod);
         receipt.setPaymentType(paymentType);
-        receipt.setTenantName(tenantName);
+        receipt.setTenantHistory(tenantHistory);
         receipt.setUser(user);
         return receiptRepository.save(receipt);
     }
@@ -69,13 +70,13 @@ public class ReceiptService {
         receiptRepository.deleteById(id);
     }
 
-    public List<Receipt> searchAllReceipts(String propertyName, Integer month) {
+    public List<Receipt> searchAllReceipts(String propertyAddress, Integer month) {
         List<Receipt> all = receiptRepository.findAllByOrderByCreatedAtDesc();
         return all.stream()
-                .filter(r -> propertyName == null || propertyName.isEmpty() ||
+                .filter(r -> propertyAddress == null || propertyAddress.isEmpty() ||
                         (r.getProperty() != null &&
                                 r.getProperty().getAddress()
-                                        .toLowerCase().contains(propertyName.toLowerCase())))
+                                        .toLowerCase().contains(propertyAddress.toLowerCase())))
                 .filter(r -> month == null ||
                         r.getReceiptDate().getMonthValue() == month)
                 .collect(java.util.stream.Collectors.toList());
@@ -93,7 +94,27 @@ public class ReceiptService {
         return total != null ? total : BigDecimal.ZERO;
     }
 
+    public long getTotalReceiptCount(User user) {
+        return receiptRepository.findByUserOrderByCreatedAtDesc(user).size();
+    }
+
     public long getTotalReceiptCountAll() {
         return receiptRepository.findAllByOrderByCreatedAtDesc().size();
+    }
+
+    public long getHighValueCountAll() {
+        return receiptRepository.findAllByOrderByCreatedAtDesc().size();
+    }
+
+    public List<Property> getPastDueProperties(List<Property> allProperties) {
+        int month = LocalDate.now().getMonthValue();
+        int year = LocalDate.now().getYear();
+        return allProperties.stream()
+                .filter(property -> {
+                    List<Receipt> receipts = receiptRepository
+                            .findByPropertyAndMonthAndYear(property, month, year);
+                    return receipts.isEmpty();
+                })
+                .collect(java.util.stream.Collectors.toList());
     }
 }

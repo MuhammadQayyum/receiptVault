@@ -95,8 +95,8 @@ public class EmailService {
                         receipt.getProperty().getZipCode() : "—",
                 receipt.getReceiptDate(),
                 receipt.getAmount().toPlainString(),
-                receipt.getDescription() != null && !receipt.getDescription().isEmpty() ?
-                        "<tr style='background:#FAFBFF;'><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:12px; color:#888; font-weight:bold; text-transform:uppercase;'>Notes</td><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:14px;'>" + receipt.getDescription() + "</td></tr>" : "",
+                receipt.getNotes() != null && !receipt.getNotes().isEmpty() ?
+                        "<tr style='background:#FAFBFF;'><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:12px; color:#888; font-weight:bold; text-transform:uppercase;'>Notes</td><td style='padding:10px 14px; border:1px solid #E2E6F0; font-size:14px;'>" + receipt.getNotes() + "</td></tr>" : "",
                 receipt.getCreatedAt()
         );
     }

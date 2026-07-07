@@ -55,9 +55,14 @@ public class TenantController {
         if (propertyId != null) {
             Property property = propertyService.getPropertyById(propertyId).orElse(null);
             if (property != null) {
-                LocalDate date = moveInDate != null && !moveInDate.isEmpty() ?
-                        LocalDate.parse(moveInDate) : LocalDate.now();
-                tenantService.assignTenantToProperty(tenant, property, date);
+                try {
+                    LocalDate date = moveInDate != null && !moveInDate.isEmpty() ?
+                            LocalDate.parse(moveInDate) : LocalDate.now();
+                    tenantService.assignTenantToProperty(tenant, property, date);
+                } catch (RuntimeException e) {
+                    redirectAttributes.addFlashAttribute("error", e.getMessage());
+                    return "redirect:/tenants";
+                }
             }
         }
 
@@ -102,12 +107,16 @@ public class TenantController {
         Property property = propertyService.getPropertyById(propertyId).orElse(null);
         if (tenant == null || property == null) return "redirect:/tenants";
 
-        LocalDate date = moveInDate != null && !moveInDate.isEmpty() ?
-                LocalDate.parse(moveInDate) : LocalDate.now();
-        tenantService.assignTenantToProperty(tenant, property, date);
+        try {
+            LocalDate date = moveInDate != null && !moveInDate.isEmpty() ?
+                    LocalDate.parse(moveInDate) : LocalDate.now();
+            tenantService.assignTenantToProperty(tenant, property, date);
+            redirectAttributes.addFlashAttribute("success",
+                    tenant.getFullName() + " assigned to " + property.getPropertyName() + " successfully!");
+        } catch (RuntimeException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
 
-        redirectAttributes.addFlashAttribute("success",
-                tenant.getFullName() + " assigned to " + property.getPropertyName() + " successfully!");
         return "redirect:/tenants/" + id + "/edit";
     }
 

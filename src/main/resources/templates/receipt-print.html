@@ -162,9 +162,9 @@
         <span class="row-label">Date:</span>
         <span class="row-value" th:text="${receipt.receiptDate}"></span>
     </div>
-    <div class="row" th:if="${receipt.tenantName != null}">
+    <div class="row" th:if="${receipt.tenantHistory != null}">
         <span class="row-label">Tenant:</span>
-        <span class="row-value" th:text="${receipt.tenantName}"></span>
+        <span class="row-value" th:text="${receipt.tenantHistory.tenant.fullName}"></span>
     </div>
     <div class="row">
         <span class="row-label">Property:</span>
@@ -195,10 +195,10 @@
     </div>
 
     <!-- Notes -->
-    <div th:if="${receipt.description != null and !receipt.description.isEmpty()}"
+    <div th:if="${receipt.notes != null and !receipt.notes.isEmpty()}"
          style="padding:4px 0;">
         <div class="small muted">Notes:</div>
-        <div class="small" th:text="${receipt.description}"></div>
+        <div class="small" th:text="${receipt.notes}"></div>
         <hr class="divider">
     </div>
 

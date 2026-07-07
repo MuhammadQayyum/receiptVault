@@ -106,7 +106,7 @@
                 </td>
                 <td>
                     <div style="font-size:13px; color:var(--navy);"
-                         th:text="${receipt.tenantName != null ? receipt.tenantName : '—'}"></div>
+                         th:text="${receipt.tenantHistory != null ? receipt.tenantHistory.tenant.fullName : '—'}"></div>
                 </td>
                 <td>
                     <div th:text="${receipt.property != null ? receipt.property.propertyName : '—'}"></div>

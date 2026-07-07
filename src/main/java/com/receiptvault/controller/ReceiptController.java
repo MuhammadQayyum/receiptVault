@@ -1,9 +1,6 @@
 package com.receiptvault.controller;
 
-import com.receiptvault.entity.Business;
-import com.receiptvault.entity.Property;
-import com.receiptvault.entity.Receipt;
-import com.receiptvault.entity.User;
+import com.receiptvault.entity.*;
 import com.receiptvault.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -56,7 +53,7 @@ public class ReceiptController {
                                 @RequestParam(required = false) Long propertyId,
                                 @RequestParam BigDecimal amount,
                                 @RequestParam String receiptDate,
-                                @RequestParam(required = false) String description,
+                                @RequestParam(required = false) String notes,
                                 @RequestParam(required = false) String paymentMethod,
                                 @RequestParam(required = false) String paymentType,
                                 @RequestParam(required = false) BigDecimal securityDeposit,
@@ -77,16 +74,18 @@ public class ReceiptController {
 
         // Get current tenant name at time of receipt creation
         String tenantName = null;
+        TenantHistory tenantHistory = null;
         if (property != null) {
-            tenantName = tenantService.getCurrentHistoryByProperty(property)
-                    .map(h -> h.getTenant().getFullName())
-                    .orElse(null);
+            var history = tenantService.getCurrentHistoryByProperty(property);
+            if (history.isPresent()) {
+                tenantName = history.get().getTenant().getFullName();
+                tenantHistory = history.get();
+            }
         }
 
         Receipt saved = receiptService.createReceipt(amount, LocalDate.parse(receiptDate),
-                description, business, property, BigDecimal.ZERO, paymentMethod, paymentType,
-                securityDeposit, tenantName, user);
-        emailService.sendReceiptEmail(saved);
+                notes, business, property, BigDecimal.ZERO, paymentMethod, paymentType,
+                securityDeposit, tenantHistory, user);
         if ("print".equals(action)) {
             return "redirect:/receipts/" + saved.getReceiptID() + "/print-redirect";
         }
@@ -130,7 +129,7 @@ public class ReceiptController {
                                 @RequestParam(required = false) Long propertyId,
                                 @RequestParam BigDecimal amount,
                                 @RequestParam String receiptDate,
-                                @RequestParam(required = false) String description,
+                                @RequestParam(required = false) String notes,
                                 @RequestParam(required = false) String paymentMethod,
                                 @RequestParam(required = false) String paymentType,
                                 @RequestParam(required = false) BigDecimal securityDeposit,
@@ -144,13 +143,12 @@ public class ReceiptController {
                 propertyService.getPropertyById(propertyId).orElse(null) : null;
         receipt.setAmount(amount);
         receipt.setReceiptDate(LocalDate.parse(receiptDate));
-        receipt.setDescription(description);
+        receipt.setNotes(notes);
         receipt.setBusiness(business);
         receipt.setProperty(property);
         receipt.setPaymentMethod(paymentMethod);
         receipt.setPaymentType(paymentType);
         receipt.setSecurityDeposit(securityDeposit != null ? securityDeposit : BigDecimal.ZERO);
-        receipt.setStoreName(property != null ? property.getPropertyName() : "Unknown");
         receiptService.saveReceipt(receipt);
         emailService.sendReceiptEmail(receipt);
         if ("print".equals(action)) {

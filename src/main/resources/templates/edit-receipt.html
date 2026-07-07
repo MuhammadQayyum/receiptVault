@@ -167,9 +167,9 @@
             <!-- Notes -->
             <div class="form-group">
                 <label class="form-label">Notes (Optional)</label>
-                <textarea name="description" class="form-control"
+                <textarea name="notes" class="form-control"
                           placeholder="Any additional notes about this receipt..."
-                          th:text="${receipt.description}"></textarea>
+                          th:text="${receipt.notes}"></textarea>
             </div>
 
             <input type="hidden" th:name="${_csrf.parameterName}"

@@ -1,9 +1,6 @@
 package com.receiptvault.controller;
 
-import com.receiptvault.entity.Business;
-import com.receiptvault.entity.Invoice;
-import com.receiptvault.entity.Receipt;
-import com.receiptvault.entity.User;
+import com.receiptvault.entity.*;
 import com.receiptvault.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -83,13 +80,17 @@ public class InvoiceController {
         String notes = (includeLateFee ? "Late payment — includes $50.00 late fee. " : "") +
                 (description != null ? description : "");
 
-        String tenantName = tenantService.getCurrentHistoryByProperty(invoice.getProperty())
-                .map(h -> h.getTenant().getFullName())
-                .orElse(null);
+        String tenantName = null;
+        TenantHistory tenantHistory = null;
+        var history = tenantService.getCurrentHistoryByProperty(invoice.getProperty());
+        if (history.isPresent()) {
+            tenantName = history.get().getTenant().getFullName();
+            tenantHistory = history.get();
+        }
 
         Receipt saved = receiptService.createReceipt(totalAmount, LocalDate.now(),
                 notes, business, invoice.getProperty(), lateFee, paymentMethod, paymentType,
-                BigDecimal.ZERO, tenantName, user);
+                BigDecimal.ZERO, tenantHistory, user);
 
         emailService.sendReceiptEmail(saved);
 

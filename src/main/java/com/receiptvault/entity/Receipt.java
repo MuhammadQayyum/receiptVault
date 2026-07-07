@@ -15,17 +15,14 @@ public class Receipt {
     @Column(name = "receiptID")
     private Long receiptID;
 
-    @Column(name = "store_name", nullable = false, length = 150)
-    private String storeName;
-
     @Column(name = "amount", nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
 
     @Column(name = "receipt_date", nullable = false)
     private LocalDate receiptDate;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "notes")
+    private String notes;
 
     @Column(name = "late_fee", precision = 10, scale = 2)
     private BigDecimal lateFee = BigDecimal.ZERO;
@@ -47,8 +44,9 @@ public class Receipt {
     @JoinColumn(name = "propertyID")
     private Property property;
 
-    @Column(name = "tenant_name", length = 150)
-    private String tenantName;
+    @ManyToOne
+    @JoinColumn(name = "history_id")
+    private TenantHistory tenantHistory;
 
     @ManyToOne
     @JoinColumn(name = "userID", nullable = false)
@@ -71,14 +69,6 @@ public class Receipt {
         this.receiptID = receiptID;
     }
 
-    public String getStoreName() {
-        return storeName;
-    }
-
-    public void setStoreName(String storeName) {
-        this.storeName = storeName;
-    }
-
     public BigDecimal getAmount() {
         return amount;
     }
@@ -95,44 +85,12 @@ public class Receipt {
         this.receiptDate = receiptDate;
     }
 
-    public String getDescription() {
-        return description;
+    public String getNotes() {
+        return notes;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Business getBusiness() {
-        return business;
-    }
-
-    public void setBusiness(Business business) {
-        this.business = business;
-    }
-
-    public Property getProperty() {
-        return property;
-    }
-
-    public void setProperty(Property property) {
-        this.property = property;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 
     public BigDecimal getLateFee() {
@@ -141,6 +99,14 @@ public class Receipt {
 
     public void setLateFee(BigDecimal lateFee) {
         this.lateFee = lateFee;
+    }
+
+    public BigDecimal getSecurityDeposit() {
+        return securityDeposit != null ? securityDeposit : BigDecimal.ZERO;
+    }
+
+    public void setSecurityDeposit(BigDecimal securityDeposit) {
+        this.securityDeposit = securityDeposit;
     }
 
     public String getPaymentMethod() {
@@ -159,19 +125,43 @@ public class Receipt {
         this.paymentType = paymentType;
     }
 
-    public BigDecimal getSecurityDeposit() {
-        return securityDeposit != null ? securityDeposit : BigDecimal.ZERO;
+    public Business getBusiness() {
+        return business;
     }
 
-    public void setSecurityDeposit(BigDecimal securityDeposit) {
-        this.securityDeposit = securityDeposit;
+    public void setBusiness(Business business) {
+        this.business = business;
     }
 
-    public String getTenantName() {
-        return tenantName;
+    public Property getProperty() {
+        return property;
     }
 
-    public void setTenantName(String tenantName) {
-        this.tenantName = tenantName;
+    public void setProperty(Property property) {
+        this.property = property;
+    }
+
+    public TenantHistory getTenantHistory() {
+        return tenantHistory;
+    }
+
+    public void setTenantHistory(TenantHistory tenantHistory) {
+        this.tenantHistory = tenantHistory;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
