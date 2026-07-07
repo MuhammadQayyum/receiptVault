@@ -66,8 +66,11 @@ public class TenantService {
     }
 
     public void assignTenantToProperty(Tenant tenant, Property property, LocalDate moveInDate) {
-        // Move out current tenant if exists
-        moveOutTenant(property, moveInDate);
+        // Block if property already has a current tenant
+        if (propertyHasCurrentTenant(property)) {
+            throw new RuntimeException("Property " + property.getPropertyName() +
+                    " already has an active tenant. Please move out the current tenant first.");
+        }
 
         // Create new history record
         TenantHistory history = new TenantHistory();
