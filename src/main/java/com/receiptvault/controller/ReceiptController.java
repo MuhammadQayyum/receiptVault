@@ -4,19 +4,17 @@ import com.receiptvault.entity.Business;
 import com.receiptvault.entity.Property;
 import com.receiptvault.entity.Receipt;
 import com.receiptvault.entity.User;
-import com.receiptvault.service.BusinessService;
-import com.receiptvault.service.EmailService;
-import com.receiptvault.service.PropertyService;
-import com.receiptvault.service.ReceiptService;
-import com.receiptvault.service.UserService;
+import com.receiptvault.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDate;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -38,10 +36,18 @@ public class ReceiptController {
     @Autowired
     private EmailService emailService;
 
+    @Autowired
+    private TenantService tenantService;
+
     @GetMapping("/new")
     public String newReceiptForm(Model model) {
         model.addAttribute("businesses", businessService.getAllBusinesses());
         model.addAttribute("properties", propertyService.getAllProperties());
+        Map<Long, Boolean> tenantMap = new java.util.HashMap<>();
+        for (Property p : propertyService.getAllProperties()) {
+            tenantMap.put(p.getPropertyID(), tenantService.propertyHasCurrentTenant(p));
+        }
+        model.addAttribute("tenantMap", tenantMap);
         return "new-receipt";
     }
 
@@ -62,9 +68,24 @@ public class ReceiptController {
                 businessService.getBusinessById(businessId).orElse(null) : null;
         Property property = propertyId != null ?
                 propertyService.getPropertyById(propertyId).orElse(null) : null;
+
+        if (property != null && !tenantService.propertyHasCurrentTenant(property)) {
+            redirectAttributes.addFlashAttribute("error",
+                    "Cannot create receipt — no tenant is assigned to " + property.getPropertyName() + ". Please assign a tenant first.");
+            return "redirect:/receipts/new";
+        }
+
+        // Get current tenant name at time of receipt creation
+        String tenantName = null;
+        if (property != null) {
+            tenantName = tenantService.getCurrentHistoryByProperty(property)
+                    .map(h -> h.getTenant().getFullName())
+                    .orElse(null);
+        }
+
         Receipt saved = receiptService.createReceipt(amount, LocalDate.parse(receiptDate),
                 description, business, property, BigDecimal.ZERO, paymentMethod, paymentType,
-                securityDeposit, user);
+                securityDeposit, tenantName, user);
         emailService.sendReceiptEmail(saved);
         if ("print".equals(action)) {
             return "redirect:/receipts/" + saved.getReceiptID() + "/print-redirect";
@@ -80,6 +101,11 @@ public class ReceiptController {
         model.addAttribute("receipt", receipt.get());
         model.addAttribute("businesses", businessService.getAllBusinesses());
         model.addAttribute("properties", propertyService.getAllProperties());
+        Map<Long, Boolean> tenantMap = new java.util.HashMap<>();
+        for (Property p : propertyService.getAllProperties()) {
+            tenantMap.put(p.getPropertyID(), tenantService.propertyHasCurrentTenant(p));
+        }
+        model.addAttribute("tenantMap", tenantMap);
         return "edit-receipt";
     }
 
@@ -90,6 +116,11 @@ public class ReceiptController {
         model.addAttribute("receipt", receipt.get());
         model.addAttribute("businesses", businessService.getAllBusinesses());
         model.addAttribute("properties", propertyService.getAllProperties());
+        Map<Long, Boolean> tenantMap = new java.util.HashMap<>();
+        for (Property p : propertyService.getAllProperties()) {
+            tenantMap.put(p.getPropertyID(), tenantService.propertyHasCurrentTenant(p));
+        }
+        model.addAttribute("tenantMap", tenantMap);
         return "edit-receipt";
     }
 

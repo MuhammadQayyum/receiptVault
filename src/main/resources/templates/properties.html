@@ -17,7 +17,8 @@
         <a href="/dashboard" class="navbar-link">Dashboard</a>
         <a href="/receipts/new" class="navbar-link">Add Receipt</a>
         <a href="/businesses" class="navbar-link">My Businesses</a>
-        <a href="/properties" class="navbar-link">Rental Properties</a>
+        <a href="/properties" class="navbar-link active">Rental Properties</a>
+        <a href="/tenants" class="navbar-link">Tenants</a>
         <a href="/invoices" class="navbar-link">Invoices</a>
         <a sec:authorize="hasRole('ADMIN')" href="/users" class="navbar-link">Manage Users</a>
     </div>
@@ -52,8 +53,9 @@
          style="display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:20px;">
 
         <div th:each="prop : ${properties}"
-             style="background:white; border-radius:12px; border:1px solid var(--border);
-                    padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.05);">
+             th:style="${tenantMap[prop.propertyID]} ?
+                        'background:white; border-radius:12px; border:1px solid var(--border); padding:24px; box-shadow:0 1px 4px rgba(0,0,0,0.05);' :
+                        'background:white; border-radius:12px; border:1px solid #FCA5A5; padding:24px; box-shadow:0 1px 4px rgba(239,68,68,0.08);'">
 
             <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:16px;">
                 <div>
@@ -62,10 +64,22 @@
                     <div style="font-size:13px; color:var(--muted);"
                          th:if="${prop.unitNumber}"
                          th:text="'Unit ' + ${prop.unitNumber}"></div>
+                    <div style="margin-top:4px;">
+                        <span th:if="${tenantMap[prop.propertyID]}"
+                              style="background:#D1FAE5; color:#065F46; padding:2px 8px;
+                                     border-radius:20px; font-size:11px; font-weight:600;">
+                            ✓ Tenant Assigned
+                        </span>
+                        <span th:unless="${tenantMap[prop.propertyID]}"
+                              style="background:#FEE2E2; color:#991B1B; padding:2px 8px;
+                                     border-radius:20px; font-size:11px; font-weight:600;">
+                            ⚠ No Tenant
+                        </span>
+                    </div>
                 </div>
-                <div style="width:42px; height:42px; background:linear-gradient(135deg,#22C55E,#16A34A);
-                            border-radius:10px; display:flex; align-items:center;
-                            justify-content:center; font-size:20px;">
+                <div th:style="${tenantMap[prop.propertyID]} ?
+                                'width:42px; height:42px; background:linear-gradient(135deg,#22C55E,#16A34A); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;' :
+                                'width:42px; height:42px; background:linear-gradient(135deg,#EF4444,#DC2626); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px;'">
                     🏠
                 </div>
             </div>
@@ -86,9 +100,11 @@
                       th:text="'$' + ${#numbers.formatDecimal(prop.rentPrice, 1, 2)}"></span>
             </div>
 
-            <div style="display:flex; gap:8px; padding-top:16px; border-top:1px solid var(--border);">
+            <div style="display:flex; gap:8px; padding-top:16px; border-top:1px solid var(--border); flex-wrap:wrap;">
                 <a th:href="'/properties/' + ${prop.propertyID} + '/edit'"
                    class="btn btn-secondary btn-sm">✏ Edit</a>
+                <a th:href="'/tenants/property/' + ${prop.propertyID}"
+                   class="btn btn-secondary btn-sm">👤 Tenant History</a>
                 <form th:action="'/properties/' + ${prop.propertyID} + '/delete'"
                       method="post"
                       onsubmit="return confirm('Delete this property?')">

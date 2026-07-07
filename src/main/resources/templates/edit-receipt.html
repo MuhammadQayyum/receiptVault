@@ -18,6 +18,7 @@
         <a href="/receipts/new" class="navbar-link">Add Receipt</a>
         <a href="/businesses" class="navbar-link">My Businesses</a>
         <a href="/properties" class="navbar-link">Rental Properties</a>
+        <a href="/tenants" class="navbar-link">Tenants</a>
         <a href="/invoices" class="navbar-link">Invoices</a>
         <a sec:authorize="hasRole('ADMIN')" href="/users" class="navbar-link">Manage Users</a>
     </div>
@@ -86,7 +87,9 @@
                             th:value="${prop.propertyID}"
                             th:selected="${receipt.property != null and receipt.property.propertyID == prop.propertyID}"
                             th:attr="data-rent=${prop.rentPrice}"
-                            th:text="${prop.propertyName + ' — ' + prop.address}"></option>
+                            th:disabled="${!tenantMap[prop.propertyID]}"
+                            th:text="${prop.propertyName + ' — ' + prop.address + (tenantMap[prop.propertyID] ? '' : ' ⚠ No Tenant')}">
+                    </option>
                 </select>
             </div>
 

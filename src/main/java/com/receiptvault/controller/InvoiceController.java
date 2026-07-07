@@ -4,12 +4,7 @@ import com.receiptvault.entity.Business;
 import com.receiptvault.entity.Invoice;
 import com.receiptvault.entity.Receipt;
 import com.receiptvault.entity.User;
-import com.receiptvault.service.BusinessService;
-import com.receiptvault.service.EmailService;
-import com.receiptvault.service.InvoiceService;
-import com.receiptvault.service.PropertyService;
-import com.receiptvault.service.ReceiptService;
-import com.receiptvault.service.UserService;
+import com.receiptvault.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -41,6 +36,9 @@ public class InvoiceController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private TenantService tenantService;
 
     private static final BigDecimal LATE_FEE = new BigDecimal("50.00");
 
@@ -85,9 +83,13 @@ public class InvoiceController {
         String notes = (includeLateFee ? "Late payment — includes $50.00 late fee. " : "") +
                 (description != null ? description : "");
 
+        String tenantName = tenantService.getCurrentHistoryByProperty(invoice.getProperty())
+                .map(h -> h.getTenant().getFullName())
+                .orElse(null);
+
         Receipt saved = receiptService.createReceipt(totalAmount, LocalDate.now(),
                 notes, business, invoice.getProperty(), lateFee, paymentMethod, paymentType,
-                BigDecimal.ZERO, user);
+                BigDecimal.ZERO, tenantName, user);
 
         emailService.sendReceiptEmail(saved);
 
